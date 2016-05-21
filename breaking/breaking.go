@@ -10,19 +10,6 @@ import (
 	"path/filepath"
 )
 
-var typeConfig = &types.Config{
-	Error: func(err error) {
-		fmt.Println(err)
-	},
-	Importer: importer.Default(),
-}
-
-var typeInfo = &types.Info{
-	Types: make(map[ast.Expr]types.TypeAndValue),
-	Defs:  make(map[*ast.Ident]types.Object),
-	Uses:  make(map[*ast.Ident]types.Object),
-}
-
 type Report struct {
 	Deleted []types.Object
 }
@@ -69,6 +56,19 @@ func (anal *analyzer) deleted() []types.Object {
 }
 
 func parseFile(filename string) (*types.Scope, error) {
+	config := &types.Config{
+		Error: func(err error) {
+			fmt.Println(err)
+		},
+		Importer: importer.Default(),
+	}
+
+	info := &types.Info{
+		Types: make(map[ast.Expr]types.TypeAndValue),
+		Defs:  make(map[*ast.Ident]types.Object),
+		Uses:  make(map[*ast.Ident]types.Object),
+	}
+
 	fset := token.NewFileSet()
 	dirname := filepath.Dir(filename)
 
@@ -83,7 +83,7 @@ func parseFile(filename string) (*types.Scope, error) {
 			files = append(files, f)
 		}
 
-		pkg, err := typeConfig.Check(filename, fset, files, typeInfo)
+		pkg, err := config.Check(filename, fset, files, info)
 		if err != nil {
 			return nil, err
 		}
