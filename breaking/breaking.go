@@ -47,7 +47,7 @@ func (anal *analyzer) deleted() []types.Object {
 		}
 
 		objb := anal.b.Lookup(name)
-		if objb == nil {
+		if objb == nil || obja.Type() != objb.Type() {
 			deleted = append(deleted, obja)
 		}
 	}
