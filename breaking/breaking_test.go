@@ -25,7 +25,7 @@ func TestDeleted(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("%s not marked as deleted", obj.Name())
+			t.Errorf("%s mistakenly marked as deleted", obj.Name())
 		}
 	}
 }
