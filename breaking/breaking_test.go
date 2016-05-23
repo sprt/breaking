@@ -4,6 +4,8 @@ import "testing"
 
 func TestDeleted(t *testing.T) {
 	names := []string{
+		"InterfaceMethodAdded",
+		"InterfaceMethodDeleted",
 		"VarDeleted",
 		"VarToFunc",
 		"VarTypeChanged",
