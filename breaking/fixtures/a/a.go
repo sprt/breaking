@@ -16,4 +16,18 @@ type InterfaceMethodParameterAdded interface {
 	Foo()
 }
 
+type InterfaceMethParamTypeChanged interface {
+	Foo(foo int)
+}
+
+type InterfaceMethRetTypeChanged interface {
+	Foo() int
+}
+
 func FuncParameterAdded() {}
+
+func FuncParamTypeChanged(foo int) {}
+
+func FuncRetTypeChanged() int {
+	return 1
+}
