@@ -11,3 +11,9 @@ type InterfaceMethodAdded interface {
 type InterfaceMethodDeleted interface {
 	Foo()
 }
+
+type InterfaceMethodParameterAdded interface {
+	Foo()
+}
+
+func FuncParameterAdded() {}

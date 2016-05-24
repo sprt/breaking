@@ -10,4 +10,10 @@ type InterfaceMethodAdded interface {
 type InterfaceMethodDeleted interface {
 }
 
+type InterfaceMethodParameterAdded interface {
+	Foo(foo int)
+}
+
 func VarToFunc() {}
+
+func FuncParameterAdded(foo int) {}
