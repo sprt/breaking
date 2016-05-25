@@ -2,10 +2,16 @@ package breaking
 
 import "testing"
 
+const (
+	filenamea = "fixtures/a/a.go"
+	filenameb = "fixtures/b/b.go"
+)
+
 func TestDeleted(t *testing.T) {
 	names := []string{
 		"FuncParameterAdded",
 		"FuncParamTypeChanged",
+		"FuncResAdded",
 		"FuncRetTypeChanged",
 		"InterfaceMethodAdded",
 		"InterfaceMethodDeleted",
@@ -17,21 +23,46 @@ func TestDeleted(t *testing.T) {
 		"VarTypeChanged",
 	}
 
-	report, err := CompareFiles("fixtures/a/a.go", "fixtures/b/b.go")
+	report, err := CompareFiles(filenamea, filenameb)
 	if err != nil {
 		t.Error(err)
 	}
 
-	for _, obj := range report.Deleted {
-		found := false
-		for _, name := range names {
-			if name == obj.Name() {
-				found = true
+	for _, name := range names {
+		deleted := false
+		for _, obj := range report.Deleted {
+			if obj.Name() == name {
+				deleted = true
 				break
 			}
 		}
-		if !found {
-			t.Errorf("%s mistakenly marked as deleted", obj.Name())
+		if !deleted {
+			t.Errorf("not marked as deleted: %s", name)
+		}
+	}
+}
+
+func TestNotDeleted(t *testing.T) {
+	names := []string{
+		"FuncParamRenamed",
+		"FuncResRenamed",
+	}
+
+	report, err := CompareFiles(filenamea, filenameb)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, name := range names {
+		deleted := false
+		for _, obj := range report.Deleted {
+			if obj.Name() == name {
+				deleted = true
+				break
+			}
+		}
+		if deleted {
+			t.Errorf("marked as deleted: %s", name)
 		}
 	}
 }
