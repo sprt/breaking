@@ -1,5 +1,7 @@
 package main
 
+// deleted
+
 var VarDeleted int
 var VarToFunc int
 var VarTypeChanged int
@@ -31,3 +33,7 @@ func FuncParamTypeChanged(foo int) {}
 func FuncRetTypeChanged() int {
 	return 1
 }
+
+// not deleted
+
+func FuncParamRenamed(foo int) {}

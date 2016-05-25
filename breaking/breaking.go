@@ -39,20 +39,41 @@ type analyzer struct {
 
 func (anal *analyzer) deleted() []types.Object {
 	deleted := []types.Object{}
-
 	for _, name := range anal.a.Names() {
-		obja := anal.a.Lookup(name)
-		if !obja.Exported() {
-			continue
-		}
-
-		objb := anal.b.Lookup(name)
-		if objb == nil || obja.Type() != objb.Type() {
-			deleted = append(deleted, obja)
+		a := anal.a.Lookup(name)
+		b := anal.b.Lookup(name)
+		if isDeleted(a, b) {
+			deleted = append(deleted, a)
 		}
 	}
-
 	return deleted
+}
+
+func isDeleted(a, b types.Object) bool {
+	if !a.Exported() {
+		return false
+	}
+
+	if b == nil {
+		return true
+	}
+
+	signa, _ := a.Type().(*types.Signature)
+	signb, _ := b.Type().(*types.Signature)
+	if signa != nil && signb != nil {
+		if signa.Params().Len() != signb.Params().Len() {
+			return true
+		}
+		for i := 0; i < signa.Params().Len(); i++ {
+			// XXX: use types.AssignableTo here?
+			if signa.Params().At(i).Type() != signb.Params().At(i).Type() {
+				return true
+			}
+		}
+		return false
+	}
+
+	return a.Type() != b.Type()
 }
 
 func parseFile(filename string) (*types.Scope, error) {

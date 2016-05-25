@@ -1,5 +1,7 @@
 package main
 
+// deleted
+
 var VarTypeChanged float64
 
 type InterfaceMethodAdded interface {
@@ -31,3 +33,7 @@ func FuncParamTypeChanged(foo float64) {}
 func FuncRetTypeChanged() float64 {
 	return 1
 }
+
+// deleted
+
+func FuncParamRenamed(bar int) {}
