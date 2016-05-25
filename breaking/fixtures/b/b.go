@@ -34,6 +34,6 @@ func FuncRetTypeChanged() float64 {
 	return 1
 }
 
-// deleted
+// not deleted
 
 func FuncParamRenamed(bar int) {}
