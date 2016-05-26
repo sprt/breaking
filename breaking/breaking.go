@@ -70,7 +70,7 @@ func isDeleted(a, b types.Object) bool {
 				return true
 			}
 		}
-		return false
+		return signa.Recv() != signb.Recv() || signa.Results() != signb.Results()
 	}
 
 	return a.Type() != b.Type()
