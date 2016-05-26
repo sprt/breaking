@@ -30,6 +30,8 @@ func FuncParameterAdded() {}
 
 func FuncParamTypeChanged(foo int) {}
 
+func FuncResAdded() {}
+
 func FuncRetTypeChanged() int {
 	return 1
 }
@@ -37,3 +39,5 @@ func FuncRetTypeChanged() int {
 // not deleted
 
 func FuncParamRenamed(foo int) {}
+
+func FuncResRenamed() (foo int) { return }
