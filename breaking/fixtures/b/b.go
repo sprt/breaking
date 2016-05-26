@@ -9,9 +9,6 @@ type InterfaceMethodAdded interface {
 	Bar()
 }
 
-type InterfaceMethodDeleted interface {
-}
-
 type InterfaceMethodParameterAdded interface {
 	Foo(foo int)
 }
@@ -37,6 +34,9 @@ func FuncRetTypeChanged() float64 {
 }
 
 // not deleted
+
+type InterfaceMethodDeleted interface {
+}
 
 func FuncParamRenamed(bar int) {}
 

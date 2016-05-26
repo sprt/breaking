@@ -14,7 +14,6 @@ func TestDeleted(t *testing.T) {
 		"FuncResAdded",
 		"FuncRetTypeChanged",
 		"InterfaceMethodAdded",
-		"InterfaceMethodDeleted",
 		"InterfaceMethodParameterAdded",
 		"InterfaceMethParamTypeChanged",
 		"InterfaceMethRetTypeChanged",
@@ -46,6 +45,7 @@ func TestNotDeleted(t *testing.T) {
 	names := []string{
 		"FuncParamRenamed",
 		"FuncResRenamed",
+		"InterfaceMethodDeleted",
 	}
 
 	report, err := CompareFiles(filenamea, filenameb)
