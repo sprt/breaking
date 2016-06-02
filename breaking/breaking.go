@@ -17,17 +17,17 @@ type Report struct {
 }
 
 func CompareFiles(a, b string) (*Report, error) {
-	scopea, err := parseFile(a)
+	oldScope, err := parseFile(a)
 	if err != nil {
 		return nil, err
 	}
 
-	scopeb, err := parseFile(b)
+	newScope, err := parseFile(b)
 	if err != nil {
 		return nil, err
 	}
 
-	analyzer := &analyzer{a: scopea, b: scopeb}
+	analyzer := &analyzer{a: oldScope, b: newScope}
 
 	report := &Report{}
 	report.Deleted = analyzer.deleted()
@@ -64,17 +64,17 @@ func isDeleted(a, b types.Object) bool {
 		return false
 	}
 
-	structa, _ := a.Type().Underlying().(*types.Struct)
-	structb, _ := b.Type().Underlying().(*types.Struct)
-	if structa != nil && structb != nil {
-		if structa.NumFields() == 0 {
+	oldStruct, _ := a.Type().Underlying().(*types.Struct)
+	newStruct, _ := b.Type().Underlying().(*types.Struct)
+	if oldStruct != nil && newStruct != nil {
+		if oldStruct.NumFields() == 0 {
 			return false
 		}
 
 		oldExportedNum := 0
 		oldUnexportedNum := 0
-		for i := 0; i < structa.NumFields(); i++ {
-			if structa.Field(i).Exported() {
+		for i := 0; i < oldStruct.NumFields(); i++ {
+			if oldStruct.Field(i).Exported() {
 				oldExportedNum++
 			} else {
 				oldUnexportedNum++
@@ -86,15 +86,15 @@ func isDeleted(a, b types.Object) bool {
 		}
 
 		fields := make(map[*fieldKey]int)
-		for i := 0; i < structa.NumFields(); i++ {
-			f := structa.Field(i)
+		for i := 0; i < oldStruct.NumFields(); i++ {
+			f := oldStruct.Field(i)
 			if f.Exported() {
 				k := fieldToKey(f)
 				fields[k] |= 1
 			}
 		}
-		for i := 0; i < structb.NumFields(); i++ {
-			f := structb.Field(i)
+		for i := 0; i < newStruct.NumFields(); i++ {
+			f := newStruct.Field(i)
 			if f.Exported() {
 				k := fieldToKey(f)
 				fields[k] |= 2
