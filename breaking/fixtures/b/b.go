@@ -33,6 +33,30 @@ func FuncRetTypeChanged() float64 {
 	return 1
 }
 
+type StructExportedAddedExported struct {
+	Foo, Bar int
+}
+
+type StructExportedAddedUnexported struct {
+	Foo, foo int
+}
+
+type StructExportedRemoved struct {
+}
+
+type StructExportedRepositioned struct {
+	Bar string
+	Foo int
+}
+
+type StructFieldRenamed struct {
+	Bar int
+}
+
+type StructMixedExportedRemoved struct {
+	foo int
+}
+
 // not deleted
 
 type InterfaceMethodDeleted interface {
@@ -41,3 +65,41 @@ type InterfaceMethodDeleted interface {
 func FuncParamRenamed(bar int) {}
 
 func FuncResRenamed() (bar int) { return }
+
+type StructEmptyAddedExported struct {
+	Foo int
+}
+
+type StructEmptyAddedUnexported struct {
+	foo int
+}
+
+type StructUnexportedAddedExported struct {
+	foo, Foo int
+}
+
+type StructUnexportedAddedUnexported struct {
+	foo, bar int
+}
+
+type StructUnexportedRepositioned struct {
+	bar string
+	foo int
+}
+
+type StructMixedAddedExported struct {
+	foo, Foo, Bar int
+}
+
+type StructMixedRepositionedExported struct {
+	foo int
+	Bar string
+	Foo int
+}
+
+type StructMixedRepositionedUnexported struct {
+	foo, bar, Foo int
+}
+
+type StructUnexportedRemoved struct {
+}

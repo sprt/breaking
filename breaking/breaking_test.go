@@ -17,6 +17,12 @@ func TestDeleted(t *testing.T) {
 		"InterfaceMethodParameterAdded",
 		"InterfaceMethParamTypeChanged",
 		"InterfaceMethRetTypeChanged",
+		"StructExportedAddedExported",
+		"StructExportedAddedUnexported",
+		"StructExportedRemoved",
+		"StructExportedRepositioned",
+		"StructFieldRenamed",
+		"StructMixedExportedRemoved",
 		"VarDeleted",
 		"VarToFunc",
 		"VarTypeChanged",
@@ -46,6 +52,15 @@ func TestNotDeleted(t *testing.T) {
 		"FuncParamRenamed",
 		"FuncResRenamed",
 		"InterfaceMethodDeleted",
+		"StructEmptyAddedExported",
+		"StructEmptyAddedUnexported",
+		"StructMixedAddedExported",
+		"StructMixedRepositionedExported",
+		"StructMixedRepositionedUnexported",
+		"StructUnexportedAddedExported",
+		"StructUnexportedAddedUnexported",
+		"StructUnexportedRemoved",
+		"StructUnexportedRepositioned",
 	}
 
 	report, err := CompareFiles(filenamea, filenameb)
