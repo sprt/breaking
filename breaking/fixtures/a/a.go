@@ -2,9 +2,15 @@ package main
 
 // deleted
 
-var VarDeleted int
-var VarToFunc int
-var VarTypeChanged int
+func FuncParameterAdded() {}
+
+func FuncParamTypeChanged(foo int) {}
+
+func FuncResAdded() {}
+
+func FuncRetTypeChanged() int {
+	return 1
+}
 
 type InterfaceMethodAdded interface {
 	Foo()
@@ -20,16 +26,6 @@ type InterfaceMethParamTypeChanged interface {
 
 type InterfaceMethRetTypeChanged interface {
 	Foo() int
-}
-
-func FuncParameterAdded() {}
-
-func FuncParamTypeChanged(foo int) {}
-
-func FuncResAdded() {}
-
-func FuncRetTypeChanged() int {
-	return 1
 }
 
 type StructExportedAddedExported struct {
@@ -57,15 +53,19 @@ type StructMixedExportedRemoved struct {
 	Foo, foo int
 }
 
-// not deleted
+var VarDeleted int
+var VarToFunc int
+var VarTypeChanged int
 
-type InterfaceMethodDeleted interface {
-	Foo()
-}
+// not deleted
 
 func FuncParamRenamed(foo int) {}
 
 func FuncResRenamed() (foo int) { return }
+
+type InterfaceMethodDeleted interface {
+	Foo()
+}
 
 type StructEmptyAddedExported struct {
 }
