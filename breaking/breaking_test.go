@@ -23,6 +23,7 @@ func TestDeleted(t *testing.T) {
 		"StructExportedRepositioned",
 		"StructFieldRenamed",
 		"StructMixedExportedRemoved",
+		"TypeStructToVar",
 		"VarDeleted",
 		"VarToFunc",
 		"VarTypeChanged",

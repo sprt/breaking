@@ -57,6 +57,8 @@ type StructMixedExportedRemoved struct {
 
 var VarTypeChanged float64
 
+var TypeStructToVar struct{}
+
 // not deleted
 
 func FuncParamRenamed(bar int) {}

@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"go/types"
 	"path/filepath"
+	"reflect"
 
 	"golang.org/x/tools/go/types/typeutil"
 )
@@ -57,6 +58,10 @@ func isDeleted(a, b types.Object) bool {
 	}
 
 	if b == nil {
+		return true
+	}
+
+	if reflect.TypeOf(a.Type()) != reflect.TypeOf(b.Type()) {
 		return true
 	}
 
