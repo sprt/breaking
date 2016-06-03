@@ -85,7 +85,6 @@ func isDeleted(a, b types.Object) bool {
 				oldUnexportedNum++
 			}
 		}
-
 		if oldExportedNum == 0 {
 			return false
 		}
@@ -94,27 +93,20 @@ func isDeleted(a, b types.Object) bool {
 		for i := 0; i < oldStruct.NumFields(); i++ {
 			f := oldStruct.Field(i)
 			if f.Exported() {
-				k := fieldToKey(f)
-				fields[k] |= 1
+				fields[fieldToKey(f)] |= 1
 			}
 		}
 		for i := 0; i < newStruct.NumFields(); i++ {
 			f := newStruct.Field(i)
 			if f.Exported() {
-				k := fieldToKey(f)
-				fields[k] |= 2
+				fields[fieldToKey(f)] |= 2
 			}
 		}
 
-		addedExported := false
 		for _, v := range fields {
-			if v == 2 {
-				addedExported = true
+			if v == 2 && oldUnexportedNum > 0 {
+				return false
 			}
-		}
-
-		if oldUnexportedNum > 0 && addedExported {
-			return false
 		}
 
 		return true
