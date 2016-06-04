@@ -53,14 +53,19 @@ func (anal *analyzer) deleted() []types.Object {
 }
 
 func isDeleted(a, b types.Object) bool {
+	// We don't care about a previously unexported name:
+	// both adding or removing an unexported name and
+	// adding an exported name are okay.
 	if !a.Exported() {
 		return false
 	}
 
+	// Exported name removed
 	if b == nil {
 		return true
 	}
 
+	// Different kinds
 	if reflect.TypeOf(a.Type()) != reflect.TypeOf(b.Type()) {
 		return true
 	}
