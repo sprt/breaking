@@ -7,6 +7,8 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 
@@ -18,18 +20,17 @@ type Report struct {
 }
 
 func CompareFiles(a, b string) (*Report, error) {
-	oldScope, err := parseFile(a)
+	oldPkg, err := parseAndCheckFromFilename(a)
 	if err != nil {
 		return nil, err
 	}
 
-	newScope, err := parseFile(b)
+	newPkg, err := parseAndCheckFromFilename(b)
 	if err != nil {
 		return nil, err
 	}
 
-	analyzer := &analyzer{a: oldScope, b: newScope}
-
+	analyzer := &analyzer{a: oldPkg.Scope(), b: newPkg.Scope()}
 	report := &Report{}
 	report.Deleted = analyzer.deleted()
 
@@ -130,42 +131,54 @@ func fieldToKey(f *types.Var) *fieldKey {
 	return &fieldKey{name: f.Name(), typ: h.Hash(f.Type())}
 }
 
-func parseFile(filename string) (*types.Scope, error) {
-	config := &types.Config{
-		Error: func(err error) {
-			fmt.Println(err)
-		},
-		Importer: importer.Default(),
-	}
-
-	info := &types.Info{
-		Types: make(map[ast.Expr]types.TypeAndValue),
-		Defs:  make(map[*ast.Ident]types.Object),
-		Uses:  make(map[*ast.Ident]types.Object),
-	}
-
-	fset := token.NewFileSet()
-	dirname := filepath.Dir(filename)
-
-	pkgs, err := parser.ParseDir(fset, dirname, nil, 0)
+func parseAndCheckFromFilename(path string) (*types.Package, error) {
+	fd, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
+	defer fd.Close()
 
-	for _, p := range pkgs {
-		files := []*ast.File{}
-		for _, f := range p.Files {
-			files = append(files, f)
-		}
+	fset := token.NewFileSet()
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+	return parseAndCheck(fset, dir, map[string]io.Reader{base: fd})
+}
 
-		pkg, err := config.Check(filename, fset, files, info)
-		if err != nil {
+func parseAndCheck(fset *token.FileSet, path string, files map[string]io.Reader) (*types.Package, error) {
+	pkg, err := parseFiles(fset, files)
+	if err != nil {
+		return nil, err
+	}
+	return checkPackage(fset, path, pkg)
+}
+
+func parseFiles(fset *token.FileSet, files map[string]io.Reader) (*ast.Package, error) {
+	pkg := &ast.Package{Files: make(map[string]*ast.File)}
+	for filename, reader := range files {
+		if src, err := parser.ParseFile(fset, filename, reader, 0); err == nil {
+			name := src.Name.Name
+			pkg.Name = name
+			pkg.Files[filename] = src
+		} else {
 			return nil, err
 		}
+	}
+	return pkg, nil
+}
 
-		return pkg.Scope(), nil
+func checkPackage(fset *token.FileSet, path string, pkg *ast.Package) (*types.Package, error) {
+	conf := &types.Config{
+		Error: func(err error) {
+			fmt.Println("type checker:", err)
+		},
+		IgnoreFuncBodies: true,
+		Importer:         importer.Default(),
 	}
 
-	// TODO: do something here
-	return nil, nil
+	files := make([]*ast.File, 0, len(pkg.Files))
+	for _, f := range pkg.Files {
+		files = append(files, f)
+	}
+
+	return conf.Check(path, fset, files, nil)
 }
