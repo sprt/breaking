@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/sprt/gobreaking/breaking"
+	"github.com/sprt/breaking"
 )
 
 func main() {
