@@ -21,6 +21,7 @@ func TestDeleted(t *testing.T) {
 		"StructExportedAddedUnexported",
 		"StructExportedRemoved",
 		"StructExportedRepositioned",
+		"StructExportedTypeChanged",
 		"StructFieldRenamed",
 		"StructMixedExportedRemoved",
 		"TypeStructToVar",

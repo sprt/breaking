@@ -45,6 +45,10 @@ type StructExportedRemoved struct {
 	Foo int
 }
 
+type StructExportedTypeChanged struct {
+	Foo int
+}
+
 type StructFieldRenamed struct {
 	Foo int
 }

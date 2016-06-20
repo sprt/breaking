@@ -42,6 +42,10 @@ type StructExportedAddedUnexported struct {
 type StructExportedRemoved struct {
 }
 
+type StructExportedTypeChanged struct {
+	Foo float64
+}
+
 type StructExportedRepositioned struct {
 	Bar string
 	Foo int
