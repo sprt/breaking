@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"github.com/sprt/breaking/typecmp"
+
 	"golang.org/x/tools/go/types/typeutil"
 )
 
@@ -71,7 +73,7 @@ func isDeleted(a, b types.Object) bool {
 		return true
 	}
 
-	if types.AssignableTo(a.Type(), b.Type()) {
+	if typecmp.AssignableTo(a.Type(), b.Type()) {
 		return false
 	}
 

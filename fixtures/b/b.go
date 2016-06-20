@@ -68,12 +68,19 @@ func FuncResRenamed() (bar int) { return }
 type InterfaceMethodDeleted interface {
 }
 
+type NamedType int
+
 type StructEmptyAddedExported struct {
 	Foo int
 }
 
 type StructEmptyAddedUnexported struct {
 	foo int
+}
+
+type namedType int
+type StructNamedType struct {
+	Foo namedType
 }
 
 type StructUnexportedAddedExported struct {

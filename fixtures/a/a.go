@@ -69,6 +69,8 @@ type InterfaceMethodDeleted interface {
 	Foo()
 }
 
+type NamedType int
+
 type StructEmptyAddedExported struct {
 }
 
@@ -87,6 +89,16 @@ type StructMixedRepositionedExported struct {
 
 type StructMixedRepositionedUnexported struct {
 	foo, Foo, bar int
+}
+
+type StructMixedExportedNamedType struct {
+	foo int
+	Foo NamedType
+}
+
+type namedType int
+type StructNamedType struct {
+	Foo namedType
 }
 
 type StructUnexportedAddedExported struct {
