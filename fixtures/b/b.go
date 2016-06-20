@@ -31,12 +31,12 @@ type InterfaceMethRetTypeChanged interface {
 	Foo() float64
 }
 
-type StructExportedAddedExported struct {
-	Foo, Bar int
-}
-
 type StructExportedAddedUnexported struct {
 	Foo, foo int
+}
+
+type StructExportedPrependedExported struct {
+	Bar, Foo int
 }
 
 type StructExportedRemoved struct {
@@ -80,6 +80,10 @@ type StructEmptyAddedExported struct {
 
 type StructEmptyAddedUnexported struct {
 	foo int
+}
+
+type StructExportedAppendedExported struct {
+	Foo, Bar int
 }
 
 type namedType int

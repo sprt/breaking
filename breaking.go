@@ -13,8 +13,6 @@ import (
 	"reflect"
 
 	"github.com/sprt/breaking/typecmp"
-
-	"golang.org/x/tools/go/types/typeutil"
 )
 
 type Report struct {
@@ -84,53 +82,56 @@ func isDeleted(a, b types.Object) bool {
 			return false
 		}
 
-		oldExportedNum := 0
+		oldExported := []*types.Var{}
 		oldUnexportedNum := 0
 		for i := 0; i < oldStruct.NumFields(); i++ {
 			if oldStruct.Field(i).Exported() {
-				oldExportedNum++
+				oldExported = append(oldExported, oldStruct.Field(i))
 			} else {
 				oldUnexportedNum++
 			}
 		}
-		if oldExportedNum == 0 {
+		if len(oldExported) == 0 {
 			return false
 		}
 
-		fields := make(map[*fieldKey]int)
-		for i := 0; i < oldStruct.NumFields(); i++ {
-			f := oldStruct.Field(i)
-			if f.Exported() {
-				fields[fieldToKey(f)] |= 1
-			}
-		}
+		newExported := []*types.Var{}
 		for i := 0; i < newStruct.NumFields(); i++ {
-			f := newStruct.Field(i)
-			if f.Exported() {
-				fields[fieldToKey(f)] |= 2
+			if newStruct.Field(i).Exported() {
+				newExported = append(newExported, newStruct.Field(i))
+			} else if oldUnexportedNum == 0 { // oldExportedNum > 0
+				// The old struct does not have unexported fields
+				// but the new struct does
+				return true
 			}
 		}
 
-		for _, v := range fields {
-			if v == 2 && oldUnexportedNum > 0 {
-				return false
+		for i, oldf := range oldExported {
+			// If the old struct does not have unexported fields,
+			// the order of the exported fields must be preserved.
+			// In any case, exported fields must not be removed.
+			if oldUnexportedNum == 0 {
+				if i >= len(newExported) {
+					return true
+				}
+				newf := newExported[i]
+				if newf.Name() != oldf.Name() || !typecmp.AssignableTo(oldf.Type(), newf.Type()) {
+					return true
+				}
+			} else {
+				for _, f := range newExported {
+					if f.Name() == oldf.Name() {
+						return !typecmp.AssignableTo(oldf.Type(), f.Type())
+					}
+				}
+				return true // no matching field in newExported
 			}
 		}
 
-		return true
+		return false
 	}
 
 	return true
-}
-
-type fieldKey struct {
-	name string
-	typ  uint32
-}
-
-func fieldToKey(f *types.Var) *fieldKey {
-	h := typeutil.MakeHasher()
-	return &fieldKey{name: f.Name(), typ: h.Hash(f.Type())}
 }
 
 func parseAndCheckPackage(f interface{}) (*types.Package, error) {

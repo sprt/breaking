@@ -28,11 +28,11 @@ type InterfaceMethRetTypeChanged interface {
 	Foo() int
 }
 
-type StructExportedAddedExported struct {
+type StructExportedAddedUnexported struct {
 	Foo int
 }
 
-type StructExportedAddedUnexported struct {
+type StructExportedPrependedExported struct {
 	Foo int
 }
 
@@ -74,6 +74,10 @@ type InterfaceMethodDeleted interface {
 }
 
 type NamedType int
+
+type StructExportedAppendedExported struct {
+	Foo int
+}
 
 type StructEmptyAddedExported struct {
 }
