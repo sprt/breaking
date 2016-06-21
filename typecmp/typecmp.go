@@ -167,7 +167,7 @@ func identical(x, y types.Type, p *ifacePair) bool {
 	case *types.Pointer:
 		// Two pointer types are identical if they have identical base types.
 		if y, ok := y.(*types.Pointer); ok {
-			return identical(x.Elem(), y.Elem(), p) // XXX: used base initially
+			return identical(x.Elem(), y.Elem(), p)
 		}
 
 	case *types.Tuple:
