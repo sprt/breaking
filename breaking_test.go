@@ -7,7 +7,15 @@ const (
 	filenameb = "fixtures/b/b.go"
 )
 
-func TestDeleted(t *testing.T) {
+func TestObjectDiffNew(t *testing.T) {
+	d := &ObjectDiff{nil, &Object{Object: nil}}
+	n := d.New()
+	if n != nil {
+		t.Error("d.New(): expected nil, got", n)
+	}
+}
+
+func TestBreaking(t *testing.T) {
 	names := []string{
 		"FuncParameterAdded",
 		"FuncParamTypeChanged",
@@ -30,14 +38,14 @@ func TestDeleted(t *testing.T) {
 		"VarTypeChanged",
 	}
 
-	report, err := ComparePackages(filenamea, filenameb)
+	diffs, err := ComparePackages(filenamea, filenameb)
 	if err != nil {
 		t.Error(err)
 	}
 
 	for _, name := range names {
 		deleted := false
-		for _, obj := range report.Deleted {
+		for _, obj := range diffs {
 			if obj.Name() == name {
 				deleted = true
 				break
@@ -49,7 +57,7 @@ func TestDeleted(t *testing.T) {
 	}
 }
 
-func TestNotDeleted(t *testing.T) {
+func TestNonBreaking(t *testing.T) {
 	names := []string{
 		"FuncParamRenamed",
 		"FuncResRenamed",
@@ -69,14 +77,14 @@ func TestNotDeleted(t *testing.T) {
 		"StructUnexportedRepositioned",
 	}
 
-	report, err := ComparePackages(filenamea, filenameb)
+	diffs, err := ComparePackages(filenamea, filenameb)
 	if err != nil {
 		t.Error(err)
 	}
 
 	for _, name := range names {
 		deleted := false
-		for _, obj := range report.Deleted {
+		for _, obj := range diffs {
 			if obj.Name() == name {
 				deleted = true
 				break

@@ -1,11 +1,13 @@
 package breaking
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/importer"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"go/types"
 	"io"
@@ -15,59 +17,86 @@ import (
 	"github.com/sprt/breaking/typecmp"
 )
 
-type Report struct {
-	Deleted []types.Object
+// An Object describes a named language entity such as
+// a constant, type, variable, function, or label.
+type Object struct {
+	types.Object
+	fset *token.FileSet
 }
 
-func ComparePackages(a, b interface{}) (*Report, error) {
-	oldPkg, err := parseAndCheckPackage(a)
+// Fpos returns the position of the object within a file.
+func (o *Object) Fpos() token.Position {
+	return o.fset.Position(o.Pos())
+}
+
+// String returns the representation of the object as reported by
+// the go/printer package.
+func (o *Object) String() string {
+	var buf bytes.Buffer
+	printer.Fprint(&buf, o.fset, o)
+	return buf.String()
+}
+
+// An ObjectDiff represents a breaking change in the representation of two objects
+// that share the same name across two packages.
+type ObjectDiff struct {
+	a, b *Object
+}
+
+// Name returns the name of the objects.
+func (d *ObjectDiff) Name() string {
+	return d.a.Name()
+}
+
+// Old returns the object before the change.
+func (d *ObjectDiff) Old() *Object {
+	return d.a
+}
+
+// New returns the object after the change, or nil if it was deleted.
+func (d *ObjectDiff) New() *Object {
+	if d.b.Object == nil {
+		return nil
+	}
+	return d.b
+}
+
+func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
+	afset := token.NewFileSet()
+	apkg, err := parseAndCheckPackage(a, afset)
 	if err != nil {
 		return nil, err
 	}
+	ascope := apkg.Scope()
 
-	newPkg, err := parseAndCheckPackage(b)
+	bfset := token.NewFileSet()
+	bpkg, err := parseAndCheckPackage(b, bfset)
 	if err != nil {
 		return nil, err
 	}
+	bscope := bpkg.Scope()
 
-	analyzer := &analyzer{a: oldPkg.Scope(), b: newPkg.Scope()}
-	report := &Report{}
-	report.Deleted = analyzer.deleted()
-
-	return report, nil
-}
-
-type analyzer struct {
-	a, b *types.Scope
-}
-
-func (anal *analyzer) deleted() []types.Object {
-	deleted := []types.Object{}
-	for _, name := range anal.a.Names() {
-		a := anal.a.Lookup(name)
-		b := anal.b.Lookup(name)
-		if isDeleted(a, b) {
-			deleted = append(deleted, a)
+	var diffs []*ObjectDiff
+	for _, name := range ascope.Names() {
+		x := ascope.Lookup(name)
+		if !x.Exported() {
+			continue
 		}
+		y := bscope.Lookup(name)
+		if y != nil && !isDeleted(x, y) {
+			continue
+		}
+		objx := &Object{x, afset}
+		objy := &Object{y, bfset}
+		diffs = append(diffs, &ObjectDiff{objx, objy})
 	}
-	return deleted
+
+	return diffs, nil
 }
 
 func isDeleted(a, b types.Object) bool {
-	// We don't care about a previously unexported name:
-	// both adding or removing an unexported name and
-	// adding an exported name are okay.
-	if !a.Exported() {
-		return false
-	}
-
-	// Exported name removed
-	if b == nil {
-		return true
-	}
-
-	// Different kinds
 	if reflect.TypeOf(a.Type()) != reflect.TypeOf(b.Type()) {
+		// Different kinds
 		return true
 	}
 
@@ -124,7 +153,8 @@ func isDeleted(a, b types.Object) bool {
 						return !typecmp.AssignableTo(oldf.Type(), f.Type())
 					}
 				}
-				return true // no matching field in newExported
+				// No matching field in newExported
+				return true
 			}
 		}
 
@@ -134,8 +164,7 @@ func isDeleted(a, b types.Object) bool {
 	return true
 }
 
-func parseAndCheckPackage(f interface{}) (*types.Package, error) {
-	var fset = token.NewFileSet()
+func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, error) {
 	var path string
 	var pkg *ast.Package
 

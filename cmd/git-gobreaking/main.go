@@ -24,14 +24,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	report, err := breaking.ComparePackages(head, wd+"/breaking.go")
+	diffs, err := breaking.ComparePackages(head, wd+"/breaking.go")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("Deleted:")
-	for _, obj := range report.Deleted {
-		fmt.Println(obj)
+	for _, d := range diffs {
+		fmt.Println(d.Name())
 	}
 }
 

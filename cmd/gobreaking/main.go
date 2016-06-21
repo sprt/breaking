@@ -16,13 +16,12 @@ func main() {
 	a := os.Args[1]
 	b := os.Args[2]
 
-	report, err := breaking.ComparePackages(a, b)
+	diffs, err := breaking.ComparePackages(a, b)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("Deleted:")
-	for _, obj := range report.Deleted {
-		fmt.Println(obj)
+	for _, d := range diffs {
+		fmt.Println(d.Name())
 	}
 }
