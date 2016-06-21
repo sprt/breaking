@@ -19,7 +19,7 @@ type Report struct {
 	Deleted []types.Object
 }
 
-func CompareFiles(a, b interface{}) (*Report, error) {
+func ComparePackages(a, b interface{}) (*Report, error) {
 	oldPkg, err := parseAndCheckPackage(a)
 	if err != nil {
 		return nil, err

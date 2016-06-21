@@ -30,7 +30,7 @@ func TestDeleted(t *testing.T) {
 		"VarTypeChanged",
 	}
 
-	report, err := CompareFiles(filenamea, filenameb)
+	report, err := ComparePackages(filenamea, filenameb)
 	if err != nil {
 		t.Error(err)
 	}
@@ -69,7 +69,7 @@ func TestNotDeleted(t *testing.T) {
 		"StructUnexportedRepositioned",
 	}
 
-	report, err := CompareFiles(filenamea, filenameb)
+	report, err := ComparePackages(filenamea, filenameb)
 	if err != nil {
 		t.Error(err)
 	}

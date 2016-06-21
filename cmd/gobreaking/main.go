@@ -16,7 +16,7 @@ func main() {
 	a := os.Args[1]
 	b := os.Args[2]
 
-	report, err := breaking.CompareFiles(a, b)
+	report, err := breaking.ComparePackages(a, b)
 	if err != nil {
 		log.Fatalln(err)
 	}
