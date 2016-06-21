@@ -83,7 +83,7 @@ func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
 			continue
 		}
 		y := bscope.Lookup(name)
-		if y != nil && !isDeleted(x, y) {
+		if y != nil && compatible(x, y) {
 			continue
 		}
 		objx := &Object{x, afset}
@@ -94,21 +94,21 @@ func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
 	return diffs, nil
 }
 
-func isDeleted(a, b types.Object) bool {
+func compatible(a, b types.Object) bool {
 	if reflect.TypeOf(a.Type()) != reflect.TypeOf(b.Type()) {
 		// Different kinds
-		return true
+		return false
 	}
 
 	if typecmp.AssignableTo(a.Type(), b.Type()) {
-		return false
+		return true
 	}
 
 	oldStruct, _ := a.Type().Underlying().(*types.Struct)
 	newStruct, _ := b.Type().Underlying().(*types.Struct)
 	if oldStruct != nil && newStruct != nil {
 		if oldStruct.NumFields() == 0 {
-			return false
+			return true
 		}
 
 		oldExported := []*types.Var{}
@@ -121,7 +121,7 @@ func isDeleted(a, b types.Object) bool {
 			}
 		}
 		if len(oldExported) == 0 {
-			return false
+			return true
 		}
 
 		newExported := []*types.Var{}
@@ -131,7 +131,7 @@ func isDeleted(a, b types.Object) bool {
 			} else if oldUnexportedNum == 0 { // oldExportedNum > 0
 				// The old struct does not have unexported fields
 				// but the new struct does
-				return true
+				return false
 			}
 		}
 
@@ -141,27 +141,27 @@ func isDeleted(a, b types.Object) bool {
 			// In any case, exported fields must not be removed.
 			if oldUnexportedNum == 0 {
 				if i >= len(newExported) {
-					return true
+					return false
 				}
 				newf := newExported[i]
 				if newf.Name() != oldf.Name() || !typecmp.AssignableTo(oldf.Type(), newf.Type()) {
-					return true
+					return false
 				}
 			} else {
 				for _, f := range newExported {
 					if f.Name() == oldf.Name() {
-						return !typecmp.AssignableTo(oldf.Type(), f.Type())
+						return typecmp.AssignableTo(oldf.Type(), f.Type())
 					}
 				}
 				// No matching field in newExported
-				return true
+				return false
 			}
 		}
 
-		return false
+		return true
 	}
 
-	return true
+	return false
 }
 
 func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, error) {
