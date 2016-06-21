@@ -109,6 +109,10 @@ type StructNamedType struct {
 	Foo namedType
 }
 
+type StructRecursive struct {
+	Foo *StructRecursive
+}
+
 type StructUnexportedAddedExported struct {
 	foo int
 }

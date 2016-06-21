@@ -62,6 +62,7 @@ func TestNotDeleted(t *testing.T) {
 		"StructMixedRepositionedExported",
 		"StructMixedRepositionedUnexported",
 		"StructNamedType",
+		"StructRecursive",
 		"StructUnexportedAddedExported",
 		"StructUnexportedAddedUnexported",
 		"StructUnexportedRemoved",

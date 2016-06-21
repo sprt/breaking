@@ -103,7 +103,7 @@ func AssignableTo(V, T types.Type) bool {
 
 // Identical reports whether x and y are identical.
 func Identical(x, y types.Type) bool {
-	return identical(x, y, nil)
+	return identical(x, y, nil, nil)
 }
 
 // An ifacePair is a node in a stack of interface type pairs compared for identity.
@@ -116,7 +116,16 @@ func (p *ifacePair) identical(q *ifacePair) bool {
 	return p.x == q.x && p.y == q.y || p.x == q.y && p.y == q.x
 }
 
-func identical(x, y types.Type, p *ifacePair) bool {
+type structPair struct {
+	x, y *types.Struct
+	prev *structPair
+}
+
+func (p *structPair) identical(q *structPair) bool {
+	return p.x == q.x && p.y == q.y || p.x == q.y && p.y == q.x
+}
+
+func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 	if x == y {
 		return true
 	}
@@ -134,13 +143,13 @@ func identical(x, y types.Type, p *ifacePair) bool {
 		// Two array types are identical if they have identical element types
 		// and the same array length.
 		if y, ok := y.(*types.Array); ok {
-			return x.Len() == y.Len() && identical(x.Elem(), y.Elem(), p)
+			return x.Len() == y.Len() && identical(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Slice:
 		// Two slice types are identical if they have identical element types.
 		if y, ok := y.(*types.Slice); ok {
-			return identical(x.Elem(), y.Elem(), p)
+			return identical(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Struct:
@@ -150,13 +159,20 @@ func identical(x, y types.Type, p *ifacePair) bool {
 		// name. Lower-case field names from different packages are always different.
 		if y, ok := y.(*types.Struct); ok {
 			if x.NumFields() == y.NumFields() {
+				qs := &structPair{x, y, ps}
+				for ps != nil {
+					if ps.identical(qs) {
+						return true // same pair was compared before
+					}
+					ps = ps.prev
+				}
 				for i := 0; i < x.NumFields(); i++ {
 					f := x.Field(i)
 					g := y.Field(i)
 					if f.Anonymous() != g.Anonymous() ||
 						x.Tag(i) != y.Tag(i) ||
 						f.Name() != g.Name() ||
-						!identical(f.Type(), g.Type(), p) {
+						!identical(f.Type(), g.Type(), pi, qs) {
 						return false
 					}
 				}
@@ -167,7 +183,8 @@ func identical(x, y types.Type, p *ifacePair) bool {
 	case *types.Pointer:
 		// Two pointer types are identical if they have identical base types.
 		if y, ok := y.(*types.Pointer); ok {
-			return identical(x.Elem(), y.Elem(), p)
+			// fmt.Println("pointer", x.Elem(), y.Elem())
+			return identical(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Tuple:
@@ -179,7 +196,7 @@ func identical(x, y types.Type, p *ifacePair) bool {
 					for i := 0; i < x.Len(); i++ {
 						v := x.At(i)
 						w := y.At(i)
-						if !identical(v.Type(), w.Type(), p) {
+						if !identical(v.Type(), w.Type(), pi, ps) {
 							return false
 						}
 					}
@@ -195,8 +212,8 @@ func identical(x, y types.Type, p *ifacePair) bool {
 		// names are not required to match.
 		if y, ok := y.(*types.Signature); ok {
 			return x.Variadic() == y.Variadic() &&
-				identical(x.Params(), y.Params(), p) &&
-				identical(x.Results(), y.Results(), p)
+				identical(x.Params(), y.Params(), pi, ps) &&
+				identical(x.Results(), y.Results(), pi, ps)
 		}
 
 	case *types.Interface:
@@ -227,17 +244,17 @@ func identical(x, y types.Type, p *ifacePair) bool {
 				// type declarations that recur via parameter types, an extremely
 				// rare occurrence). An alternative implementation might use a
 				// "visited" map, but that is probably less efficient overall.
-				q := &ifacePair{x, y, p}
-				for p != nil {
-					if p.identical(q) {
+				qi := &ifacePair{x, y, pi}
+				for pi != nil {
+					if pi.identical(qi) {
 						return true // same pair was compared before
 					}
-					p = p.prev
+					pi = pi.prev
 				}
 				for i := 0; i < x.NumMethods(); i++ {
 					f := x.Method(i)
 					g := y.Method(i)
-					if f.Name() != g.Name() || !identical(f.Type(), g.Type(), q) {
+					if f.Name() != g.Name() || !identical(f.Type(), g.Type(), qi, ps) {
 						return false
 					}
 				}
@@ -248,18 +265,18 @@ func identical(x, y types.Type, p *ifacePair) bool {
 	case *types.Map:
 		// Two map types are identical if they have identical key and value types.
 		if y, ok := y.(*types.Map); ok {
-			return identical(x.Key(), y.Key(), p) && identical(x.Elem(), y.Elem(), p)
+			return identical(x.Key(), y.Key(), pi, ps) && identical(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Chan:
 		// Two channel types are identical if they have identical value types
 		// and the same direction.
 		if y, ok := y.(*types.Chan); ok {
-			return x.Dir() == y.Dir() && identical(x.Elem(), y.Elem(), p)
+			return x.Dir() == y.Dir() && identical(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Named:
-		return identical(x.Underlying(), y.Underlying(), p)
+		return identical(x.Underlying(), y.Underlying(), pi, ps)
 
 	default:
 		panic("unreachable")
