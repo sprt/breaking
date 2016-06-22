@@ -18,13 +18,18 @@ import (
 // An Object describes a named language entity such as
 // a constant, type, variable, function.
 type Object struct {
-	types.Object
+	obj  types.Object
 	fset *token.FileSet
+}
+
+// Name returns the name of the object.
+func (o *Object) Name() string {
+	return o.obj.Name()
 }
 
 // Fpos returns the position of the object within a file.
 func (o *Object) Fpos() token.Position {
-	return o.fset.Position(o.Pos())
+	return o.fset.Position(o.obj.Pos())
 }
 
 // An ObjectDiff represents a breaking change in the representation of two objects
@@ -35,7 +40,7 @@ type ObjectDiff struct {
 
 // Name returns the name of the objects.
 func (d *ObjectDiff) Name() string {
-	return d.a.Name()
+	return d.a.obj.Name()
 }
 
 // Old returns the object before the change.
@@ -45,7 +50,7 @@ func (d *ObjectDiff) Old() *Object {
 
 // New returns the object after the change, or nil if it was deleted.
 func (d *ObjectDiff) New() *Object {
-	if d.b.Object == nil {
+	if d.b.obj == nil {
 		return nil
 	}
 	return d.b

@@ -8,7 +8,7 @@ const (
 )
 
 func TestObjectDiffNew(t *testing.T) {
-	d := &ObjectDiff{nil, &Object{Object: nil}}
+	d := &ObjectDiff{nil, &Object{obj: nil}}
 	n := d.New()
 	if n != nil {
 		t.Error("d.New(): expected nil, got", n)
