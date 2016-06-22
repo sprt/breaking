@@ -1,13 +1,11 @@
 package breaking
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/importer"
 	"go/parser"
-	"go/printer"
 	"go/token"
 	"go/types"
 	"io"
@@ -27,14 +25,6 @@ type Object struct {
 // Fpos returns the position of the object within a file.
 func (o *Object) Fpos() token.Position {
 	return o.fset.Position(o.Pos())
-}
-
-// String returns the representation of the object as reported by
-// the go/printer package.
-func (o *Object) String() string {
-	var buf bytes.Buffer
-	printer.Fprint(&buf, o.fset, o)
-	return buf.String()
 }
 
 // An ObjectDiff represents a breaking change in the representation of two objects
