@@ -112,8 +112,8 @@ func compatible(a, b types.Object) bool {
 			return true
 		}
 
-		oldExported := []*types.Var{}
-		oldUnexportedNum := 0
+		var oldExported []*types.Var
+		var oldUnexportedNum int
 		for i := 0; i < oldStruct.NumFields(); i++ {
 			if oldStruct.Field(i).Exported() {
 				oldExported = append(oldExported, oldStruct.Field(i))
@@ -125,7 +125,7 @@ func compatible(a, b types.Object) bool {
 			return true
 		}
 
-		newExported := []*types.Var{}
+		var newExported []*types.Var
 		for i := 0; i < newStruct.NumFields(); i++ {
 			if newStruct.Field(i).Exported() {
 				newExported = append(newExported, newStruct.Field(i))
