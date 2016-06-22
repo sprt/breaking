@@ -16,7 +16,7 @@ import (
 )
 
 // An Object describes a named language entity such as
-// a constant, type, variable, function, or label.
+// a constant, type, variable, function.
 type Object struct {
 	types.Object
 	fset *token.FileSet
