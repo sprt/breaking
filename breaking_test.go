@@ -3,8 +3,8 @@ package breaking
 import "testing"
 
 const (
-	dira = "fixtures/a"
-	dirb = "fixtures/b"
+	dira = "testdata/a"
+	dirb = "testdata/b"
 )
 
 func TestObjectDiffNew(t *testing.T) {
