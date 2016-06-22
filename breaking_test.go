@@ -3,8 +3,8 @@ package breaking
 import "testing"
 
 const (
-	filenamea = "fixtures/a/a.go"
-	filenameb = "fixtures/b/b.go"
+	dira = "fixtures/a"
+	dirb = "fixtures/b"
 )
 
 func TestObjectDiffNew(t *testing.T) {
@@ -38,7 +38,7 @@ func TestBreaking(t *testing.T) {
 		"VarTypeChanged",
 	}
 
-	diffs, err := ComparePackages(filenamea, filenameb)
+	diffs, err := ComparePackages(dira, dirb)
 	if err != nil {
 		t.Error(err)
 	}
@@ -77,7 +77,7 @@ func TestNonBreaking(t *testing.T) {
 		"StructUnexportedRepositioned",
 	}
 
-	diffs, err := ComparePackages(filenamea, filenameb)
+	diffs, err := ComparePackages(dira, dirb)
 	if err != nil {
 		t.Error(err)
 	}

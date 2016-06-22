@@ -56,6 +56,12 @@ func (d *ObjectDiff) New() *Object {
 	return d.b
 }
 
+// ComparePackages returns the breaking changes introduced by package b
+// relative to package a.
+//
+// A package can be passed as either a string or a map of string -> io.Reader.
+// If a string, it is the path to the package.
+// If a map, it maps filenames to source code.
 func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
 	afset := token.NewFileSet()
 	apkg, err := parseAndCheckPackage(a, afset)
@@ -165,7 +171,7 @@ func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, e
 
 	switch ff := f.(type) {
 	case string:
-		path = filepath.Dir(ff)
+		path = ff
 		pkgs, err := parser.ParseDir(fset, path, nil, 0)
 		if err != nil {
 			return nil, err

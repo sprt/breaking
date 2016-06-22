@@ -24,7 +24,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	diffs, err := breaking.ComparePackages(head, wd+"/breaking.go")
+	diffs, err := breaking.ComparePackages(head, wd)
 	if err != nil {
 		log.Fatalln(err)
 	}
