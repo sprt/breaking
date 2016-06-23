@@ -35,7 +35,7 @@ func main() {
 }
 
 func getHeadFiles() (map[string]io.Reader, error) {
-	tree, err := git.LsTree(false, "HEAD", ".")
+	tree, err := git.LsTree("HEAD")
 	if err != nil {
 		return nil, err
 	}

@@ -17,14 +17,10 @@ type LsTreeEntry struct {
 	Kind     ObjectKind
 }
 
-func LsTree(recursive bool, treeish string, path string) ([]*LsTreeEntry, error) {
-	args := make([]string, 0, 4)
+func LsTree(treeish string) ([]*LsTreeEntry, error) {
+	args := make([]string, 0, 3)
 	args = append(args, "ls-tree")
-	if recursive {
-		args = append(args, "-r")
-	}
 	args = append(args, treeish)
-	args = append(args, path)
 
 	out, err := exec.Command("git", args...).Output()
 	if err != nil {
