@@ -18,15 +18,10 @@ type LsTreeEntry struct {
 }
 
 func LsTree(treeish string) ([]*LsTreeEntry, error) {
-	args := make([]string, 0, 3)
-	args = append(args, "ls-tree")
-	args = append(args, treeish)
-
-	out, err := exec.Command("git", args...).Output()
+	out, err := exec.Command("git", "ls-tree", treeish).Output()
 	if err != nil {
 		return nil, err
 	}
-
 	var entries []*LsTreeEntry
 	for _, line := range strings.Split(string(out)[:len(out)-1], "\n") {
 		fields := strings.Fields(line)
