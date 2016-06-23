@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/sprt/breaking"
@@ -14,17 +13,33 @@ import (
 )
 
 func main() {
-	head, err := getHeadFiles()
-	if err != nil {
-		log.Fatalln(err)
+	var a, b interface{}
+	switch len(os.Args) {
+	case 1:
+		head, err := treeFiles("HEAD")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		wd, err := os.Getwd()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		a, b = head, wd
+	case 3:
+		x, err := treeFiles(os.Args[1])
+		if err != nil {
+			log.Fatalln(err)
+		}
+		y, err := treeFiles(os.Args[2])
+		if err != nil {
+			log.Fatalln(err)
+		}
+		a, b = x, y
+	default:
+		log.Fatalln("wrong number of arguments")
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	diffs, err := breaking.ComparePackages(head, wd)
+	diffs, err := breaking.ComparePackages(a, b)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -34,8 +49,8 @@ func main() {
 	}
 }
 
-func getHeadFiles() (map[string]io.Reader, error) {
-	tree, err := git.LsTree("HEAD")
+func treeFiles(treeish string) (map[string]io.Reader, error) {
+	tree, err := git.LsTree(treeish)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +60,7 @@ func getHeadFiles() (map[string]io.Reader, error) {
 		if entry.Kind != git.Blob || !strings.HasSuffix(entry.Filename, ".go") {
 			continue
 		}
-		b, err := git.Show("HEAD", filepath.Base(entry.Filename))
+		b, err := git.Show(treeish, entry.Filename)
 		if err != nil {
 			return nil, err
 		}

@@ -22,6 +22,7 @@ func LsTree(treeish string) ([]*LsTreeEntry, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var entries []*LsTreeEntry
 	for _, line := range strings.Split(string(out)[:len(out)-1], "\n") {
 		fields := strings.Fields(line)
