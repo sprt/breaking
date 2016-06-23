@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -9,10 +10,16 @@ import (
 	"github.com/sprt/breaking/cmd/gobreaking/git"
 )
 
+func init() {
+	flag.Usage = usage
+}
+
 func main() {
+	flag.Parse()
+
 	var a, b interface{}
-	switch len(os.Args) {
-	case 1:
+	switch flag.NArg() {
+	case 0:
 		head, err := treeFiles("HEAD")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -24,13 +31,13 @@ func main() {
 			os.Exit(2)
 		}
 		a, b = head, wd
-	case 3:
-		x, err := treeFiles(os.Args[1])
+	case 2:
+		x, err := treeFiles(flag.Arg(0))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
 		}
-		y, err := treeFiles(os.Args[2])
+		y, err := treeFiles(flag.Arg(1))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
@@ -54,6 +61,11 @@ func main() {
 	if len(diffs) != 0 {
 		os.Exit(1)
 	}
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s [treeish treeish]\n", os.Args[0])
+	flag.PrintDefaults()
 }
 
 func treeFiles(treeish string) (map[string]io.Reader, error) {
