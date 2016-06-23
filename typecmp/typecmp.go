@@ -213,25 +213,3 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 
 	return false
 }
-
-func isBoolean(typ types.Type) bool {
-	t, ok := typ.Underlying().(*types.Basic)
-	return ok && t.Info()&types.IsBoolean != 0
-}
-
-func isNamed(typ types.Type) bool {
-	if _, ok := typ.(*types.Basic); ok {
-		return ok
-	}
-	_, ok := typ.(*types.Named)
-	return ok
-}
-
-func isNil(typ types.Type) bool {
-	return typ == types.Typ[types.UntypedNil]
-}
-
-func isUntyped(typ types.Type) bool {
-	t, ok := typ.Underlying().(*types.Basic)
-	return ok && t.Info()&types.IsUntyped != 0
-}
