@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"github.com/sprt/breaking"
@@ -16,34 +15,44 @@ func main() {
 	case 1:
 		head, err := treeFiles("HEAD")
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
 		}
 		wd, err := os.Getwd()
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
 		}
 		a, b = head, wd
 	case 3:
 		x, err := treeFiles(os.Args[1])
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
 		}
 		y, err := treeFiles(os.Args[2])
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
 		}
 		a, b = x, y
 	default:
-		log.Fatalln("wrong number of arguments")
+		fmt.Fprintln(os.Stderr, "wrong number of arguments")
+		os.Exit(2)
 	}
 
 	diffs, err := breaking.ComparePackages(a, b)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 
 	for _, d := range diffs {
 		fmt.Println(d.Name())
+	}
+
+	if len(diffs) != 0 {
+		os.Exit(1)
 	}
 }
 
