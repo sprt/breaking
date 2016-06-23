@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/sprt/breaking"
 	"github.com/sprt/breaking/cmd/gobreaking/git"
@@ -54,18 +52,5 @@ func treeFiles(treeish string) (map[string]io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	readers := make(map[string]io.Reader)
-	for _, entry := range tree {
-		if entry.Kind != git.Blob || !strings.HasSuffix(entry.Filename, ".go") {
-			continue
-		}
-		b, err := git.Show(treeish, entry.Filename)
-		if err != nil {
-			return nil, err
-		}
-		readers[entry.Filename] = bytes.NewReader(b)
-	}
-
-	return readers, nil
+	return tree.GoFiles()
 }

@@ -1,43 +1,61 @@
 package git
 
 import (
+	"bytes"
+	"io"
 	"os/exec"
 	"strings"
 )
 
-type ObjectKind int
+type kind int
 
 const (
-	Blob ObjectKind = iota
-	Tree
+	blob kind = iota
+	tree
 )
 
-type LsTreeEntry struct {
-	Filename string
-	Kind     ObjectKind
+type treeEntry struct {
+	filename string
+	kind     kind
 }
 
-func LsTree(treeish string) ([]*LsTreeEntry, error) {
+type Tree struct {
+	treeish string
+	entries []treeEntry
+}
+
+func LsTree(treeish string) (*Tree, error) {
 	out, err := exec.Command("git", "ls-tree", treeish).Output()
 	if err != nil {
 		return nil, err
 	}
 
-	var entries []*LsTreeEntry
+	var entries []treeEntry
 	for _, line := range strings.Split(string(out)[:len(out)-1], "\n") {
 		fields := strings.Fields(line)
-		var kind ObjectKind
+		var k kind
 		if fields[1] == "tree" {
-			kind = Tree
+			k = tree
 		} else {
-			kind = Blob
+			k = blob
 		}
-		entries = append(entries, &LsTreeEntry{Filename: fields[3], Kind: kind})
+		entries = append(entries, treeEntry{filename: fields[3], kind: k})
 	}
 
-	return entries, nil
+	return &Tree{treeish, entries}, nil
 }
 
-func Show(treeish string, filename string) ([]byte, error) {
-	return exec.Command("git", "show", treeish+":"+filename).Output()
+func (t *Tree) GoFiles() (map[string]io.Reader, error) {
+	files := make(map[string]io.Reader)
+	for _, entry := range t.entries {
+		if entry.kind != blob || !strings.HasSuffix(entry.filename, ".go") {
+			continue
+		}
+		b, err := exec.Command("git", "show", t.treeish+":"+entry.filename).Output()
+		if err != nil {
+			return nil, err
+		}
+		files[entry.filename] = bytes.NewReader(b)
+	}
+	return files, nil
 }
