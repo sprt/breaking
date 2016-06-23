@@ -19,6 +19,9 @@ type InterfaceMethodAdded interface {
 	Bar()
 }
 
+type InterfaceMethodDeleted interface {
+}
+
 type InterfaceMethodParameterAdded interface {
 	Foo(foo int)
 }
@@ -68,9 +71,6 @@ var TypeStructToVar struct{}
 func FuncParamRenamed(bar int) {}
 
 func FuncResRenamed() (bar int) { return }
-
-type InterfaceMethodDeleted interface {
-}
 
 type NamedType int
 

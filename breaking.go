@@ -101,7 +101,7 @@ func compatible(a, b types.Object) bool {
 		return false
 	}
 
-	if typecmp.AssignableTo(a.Type(), b.Type()) {
+	if typecmp.Identical(a.Type(), b.Type()) {
 		return true
 	}
 
@@ -145,13 +145,13 @@ func compatible(a, b types.Object) bool {
 					return false
 				}
 				newf := newExported[i]
-				if newf.Name() != oldf.Name() || !typecmp.AssignableTo(oldf.Type(), newf.Type()) {
+				if newf.Name() != oldf.Name() || !compatible(oldf, newf) {
 					return false
 				}
 			} else {
 				for _, f := range newExported {
 					if f.Name() == oldf.Name() {
-						return typecmp.AssignableTo(oldf.Type(), f.Type())
+						return compatible(oldf, f)
 					}
 				}
 				// No matching field in newExported

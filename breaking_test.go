@@ -22,6 +22,7 @@ func TestBreaking(t *testing.T) {
 		"FuncResAdded",
 		"FuncRetTypeChanged",
 		"InterfaceMethodAdded",
+		"InterfaceMethodDeleted",
 		"InterfaceMethodParameterAdded",
 		"InterfaceMethParamTypeChanged",
 		"InterfaceMethRetTypeChanged",
@@ -61,7 +62,6 @@ func TestNonBreaking(t *testing.T) {
 	names := []string{
 		"FuncParamRenamed",
 		"FuncResRenamed",
-		"InterfaceMethodDeleted",
 		"NamedType",
 		"StructEmptyAddedExported",
 		"StructEmptyAddedUnexported",

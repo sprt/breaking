@@ -16,6 +16,10 @@ type InterfaceMethodAdded interface {
 	Foo()
 }
 
+type InterfaceMethodDeleted interface {
+	Foo()
+}
+
 type InterfaceMethodParameterAdded interface {
 	Foo()
 }
@@ -68,10 +72,6 @@ var VarTypeChanged int
 func FuncParamRenamed(foo int) {}
 
 func FuncResRenamed() (foo int) { return }
-
-type InterfaceMethodDeleted interface {
-	Foo()
-}
 
 type NamedType int
 
