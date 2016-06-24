@@ -69,6 +69,12 @@ var VarTypeChanged int
 
 // not deleted
 
+type StructUnexportedNotIdentical struct {
+	foo int
+}
+
+func FuncResStructUnexportedNotIdentical() StructUnexportedNotIdentical {}
+
 func FuncParamRenamed(foo int) {}
 
 func FuncResRenamed() (foo int) { return }

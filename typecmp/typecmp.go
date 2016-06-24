@@ -28,11 +28,24 @@
 
 package typecmp
 
-import "go/types"
+import (
+	"go/types"
+	"reflect"
+)
 
-// Identical reports whether x and y are identical.
-func Identical(x, y types.Type) bool {
-	return identical(x, y, nil, nil)
+func Compatible(x, y types.Object) bool {
+	if y == nil {
+		return false
+	}
+	if reflect.TypeOf(x.Type()) != reflect.TypeOf(y.Type()) {
+		return false
+	}
+	return ident(x.Type(), y.Type(), nil, nil)
+}
+
+// identical reports whether x and y are identical.
+func identical(x, y types.Type) bool {
+	return ident(x, y, nil, nil)
 }
 
 // An ifacePair is a node in a stack of interface type pairs compared for identity.
@@ -54,7 +67,7 @@ func (p *structPair) identical(q *structPair) bool {
 	return p.x == q.x && p.y == q.y || p.x == q.y && p.y == q.x
 }
 
-func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
+func ident(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 	if x == y {
 		return true
 	}
@@ -72,13 +85,13 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 		// Two array types are identical if they have identical element types
 		// and the same array length.
 		if y, ok := y.(*types.Array); ok {
-			return x.Len() == y.Len() && identical(x.Elem(), y.Elem(), pi, ps)
+			return x.Len() == y.Len() && ident(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Slice:
 		// Two slice types are identical if they have identical element types.
 		if y, ok := y.(*types.Slice); ok {
-			return identical(x.Elem(), y.Elem(), pi, ps)
+			return ident(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Struct:
@@ -101,19 +114,20 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 					if f.Anonymous() != g.Anonymous() ||
 						x.Tag(i) != y.Tag(i) ||
 						f.Name() != g.Name() ||
-						!identical(f.Type(), g.Type(), pi, qs) {
-						return false
+						!ident(f.Type(), g.Type(), pi, qs) {
+						goto compat
 					}
 				}
 				return true
 			}
+		compat:
+			return structcompat(x, y)
 		}
 
 	case *types.Pointer:
 		// Two pointer types are identical if they have identical base types.
 		if y, ok := y.(*types.Pointer); ok {
-			// fmt.Println("pointer", x.Elem(), y.Elem())
-			return identical(x.Elem(), y.Elem(), pi, ps)
+			return ident(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Tuple:
@@ -125,7 +139,7 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 					for i := 0; i < x.Len(); i++ {
 						v := x.At(i)
 						w := y.At(i)
-						if !identical(v.Type(), w.Type(), pi, ps) {
+						if !ident(v.Type(), w.Type(), pi, ps) {
 							return false
 						}
 					}
@@ -141,8 +155,8 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 		// names are not required to match.
 		if y, ok := y.(*types.Signature); ok {
 			return x.Variadic() == y.Variadic() &&
-				identical(x.Params(), y.Params(), pi, ps) &&
-				identical(x.Results(), y.Results(), pi, ps)
+				ident(x.Params(), y.Params(), pi, ps) &&
+				ident(x.Results(), y.Results(), pi, ps)
 		}
 
 	case *types.Interface:
@@ -183,7 +197,7 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 				for i := 0; i < x.NumMethods(); i++ {
 					f := x.Method(i)
 					g := y.Method(i)
-					if f.Name() != g.Name() || !identical(f.Type(), g.Type(), qi, ps) {
+					if f.Name() != g.Name() || !ident(f.Type(), g.Type(), qi, ps) {
 						return false
 					}
 				}
@@ -194,22 +208,77 @@ func identical(x, y types.Type, pi *ifacePair, ps *structPair) bool {
 	case *types.Map:
 		// Two map types are identical if they have identical key and value types.
 		if y, ok := y.(*types.Map); ok {
-			return identical(x.Key(), y.Key(), pi, ps) && identical(x.Elem(), y.Elem(), pi, ps)
+			return ident(x.Key(), y.Key(), pi, ps) && ident(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Chan:
 		// Two channel types are identical if they have identical value types
 		// and the same direction.
 		if y, ok := y.(*types.Chan); ok {
-			return x.Dir() == y.Dir() && identical(x.Elem(), y.Elem(), pi, ps)
+			return x.Dir() == y.Dir() && ident(x.Elem(), y.Elem(), pi, ps)
 		}
 
 	case *types.Named:
-		return identical(x.Underlying(), y.Underlying(), pi, ps)
+		return ident(x.Underlying(), y.Underlying(), pi, ps)
 
 	default:
 		panic("unreachable")
 	}
 
 	return false
+}
+
+func structcompat(x, y *types.Struct) bool {
+	if x.NumFields() == 0 {
+		return true
+	}
+
+	var oldExported []*types.Var
+	var oldUnexportedNum int
+	for i := 0; i < x.NumFields(); i++ {
+		if x.Field(i).Exported() {
+			oldExported = append(oldExported, x.Field(i))
+		} else {
+			oldUnexportedNum++
+		}
+	}
+	if len(oldExported) == 0 {
+		return true
+	}
+
+	var newExported []*types.Var
+	for i := 0; i < y.NumFields(); i++ {
+		if y.Field(i).Exported() {
+			newExported = append(newExported, y.Field(i))
+		} else if oldUnexportedNum == 0 { // oldExportedNum > 0
+			// The old struct does not have unexported fields
+			// but the new struct does
+			return false
+		}
+	}
+
+	for i, oldf := range oldExported {
+		// If the old struct does not have unexported fields,
+		// the order of the exported fields must be preserved.
+		// In any case, exported fields must not be removed.
+		if oldUnexportedNum == 0 {
+			if i >= len(newExported) {
+				return false
+			}
+			newf := newExported[i]
+			if newf.Name() != oldf.Name() || !identical(oldf.Type(), newf.Type()) {
+				return false
+			}
+		} else {
+			for _, f := range newExported {
+				if f.Name() == oldf.Name() {
+					return identical(oldf.Type(), f.Type())
+				}
+			}
+			// No matching field in newExported
+			return false
+		}
+	}
+
+	return true
 }

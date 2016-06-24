@@ -68,6 +68,12 @@ var TypeStructToVar struct{}
 
 // not deleted
 
+type StructUnexportedNotIdentical struct {
+	bar string
+}
+
+func FuncResStructUnexportedNotIdentical() StructUnexportedNotIdentical {}
+
 func FuncParamRenamed(bar int) {}
 
 func FuncResRenamed() (bar int) { return }

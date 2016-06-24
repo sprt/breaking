@@ -24,7 +24,6 @@ import (
 	"go/types"
 	"io"
 	"path/filepath"
-	"reflect"
 
 	"github.com/sprt/breaking/typecmp"
 )
@@ -98,7 +97,7 @@ func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
 			continue
 		}
 		y := bscope.Lookup(name)
-		if y != nil && compatible(x, y) {
+		if typecmp.Compatible(x, y) {
 			continue
 		}
 		objx := &Object{x, afset}
@@ -109,75 +108,9 @@ func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
 	return diffs, nil
 }
 
-func compatible(a, b types.Object) bool {
-	if reflect.TypeOf(a.Type()) != reflect.TypeOf(b.Type()) {
-		// Different kinds
-		return false
+
 	}
 
-	if typecmp.Identical(a.Type(), b.Type()) {
-		return true
-	}
-
-	oldStruct, _ := a.Type().Underlying().(*types.Struct)
-	newStruct, _ := b.Type().Underlying().(*types.Struct)
-	if oldStruct != nil && newStruct != nil {
-		if oldStruct.NumFields() == 0 {
-			return true
-		}
-
-		var oldExported []*types.Var
-		var oldUnexportedNum int
-		for i := 0; i < oldStruct.NumFields(); i++ {
-			if oldStruct.Field(i).Exported() {
-				oldExported = append(oldExported, oldStruct.Field(i))
-			} else {
-				oldUnexportedNum++
-			}
-		}
-		if len(oldExported) == 0 {
-			return true
-		}
-
-		var newExported []*types.Var
-		for i := 0; i < newStruct.NumFields(); i++ {
-			if newStruct.Field(i).Exported() {
-				newExported = append(newExported, newStruct.Field(i))
-			} else if oldUnexportedNum == 0 { // oldExportedNum > 0
-				// The old struct does not have unexported fields
-				// but the new struct does
-				return false
-			}
-		}
-
-		for i, oldf := range oldExported {
-			// If the old struct does not have unexported fields,
-			// the order of the exported fields must be preserved.
-			// In any case, exported fields must not be removed.
-			if oldUnexportedNum == 0 {
-				if i >= len(newExported) {
-					return false
-				}
-				newf := newExported[i]
-				if newf.Name() != oldf.Name() || !compatible(oldf, newf) {
-					return false
-				}
-			} else {
-				for _, f := range newExported {
-					if f.Name() == oldf.Name() {
-						return compatible(oldf, f)
-					}
-				}
-				// No matching field in newExported
-				return false
-			}
-		}
-
-		return true
-	}
-
-	return false
-}
 
 func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, error) {
 	var path string

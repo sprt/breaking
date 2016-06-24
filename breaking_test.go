@@ -62,6 +62,7 @@ func TestNonBreaking(t *testing.T) {
 	names := []string{
 		"FuncParamRenamed",
 		"FuncResRenamed",
+		"FuncResStructUnexportedNotIdentical",
 		"NamedType",
 		"StructEmptyAddedExported",
 		"StructEmptyAddedUnexported",
