@@ -15,11 +15,13 @@
 package breaking
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/importer"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"go/types"
 	"io"
@@ -33,6 +35,7 @@ import (
 type Object struct {
 	obj  types.Object
 	fset *token.FileSet
+	decl ast.Node
 }
 
 // Name returns the name of the object.
@@ -43,6 +46,24 @@ func (o *Object) Name() string {
 // Fpos returns the position of the object within a file.
 func (o *Object) Fpos() token.Position {
 	return o.fset.Position(o.obj.Pos())
+}
+
+// String returns the object as it appears in code.
+func (o *Object) String() string {
+	decl := o.decl
+	if funcDecl, ok := decl.(*ast.FuncDecl); ok {
+		// Strip the body (forward declaration)
+		decl = &ast.FuncDecl{
+			Doc:  funcDecl.Doc,
+			Recv: funcDecl.Recv,
+			Name: funcDecl.Name,
+			Type: funcDecl.Type,
+			Body: nil,
+		}
+	}
+	var buf bytes.Buffer
+	printer.Fprint(&buf, o.fset, decl)
+	return buf.String()
 }
 
 // An ObjectDiff represents a breaking change in the representation of two objects
@@ -76,69 +97,72 @@ func (d *ObjectDiff) New() *Object {
 // If a string, it is the path to the package.
 // If a map, it maps filenames to source code.
 func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
-	afset := token.NewFileSet()
-	apkg, err := parseAndCheckPackage(a, afset)
+	apkg, err := parseAndCheckPackage(a)
 	if err != nil {
 		return nil, err
 	}
-	ascope := apkg.Scope()
 
-	bfset := token.NewFileSet()
-	bpkg, err := parseAndCheckPackage(b, bfset)
+	bpkg, err := parseAndCheckPackage(b)
 	if err != nil {
 		return nil, err
 	}
-	bscope := bpkg.Scope()
 
 	var diffs []*ObjectDiff
-	for _, name := range ascope.Names() {
-		x := ascope.Lookup(name)
+	for _, name := range apkg.scope.Names() {
+		x := apkg.scope.Lookup(name)
 		if !x.Exported() {
 			continue
 		}
-		y := bscope.Lookup(name)
+		y := bpkg.scope.Lookup(name)
 		if typecmp.Compatible(x, y) {
 			continue
 		}
-		objx := &Object{x, afset}
-		objy := &Object{y, bfset}
+		objx := &Object{x, apkg.fset, apkg.decls[name]}
+		objy := &Object{y, bpkg.fset, bpkg.decls[name]}
 		diffs = append(diffs, &ObjectDiff{objx, objy})
 	}
 
 	return diffs, nil
 }
 
+type pkg struct {
+	decls map[string]ast.Node
+	fset  *token.FileSet
+	scope *types.Scope
+}
 
+func parseAndCheckPackage(f interface{}) (*pkg, error) {
+	pkg := &pkg{
+		fset:  token.NewFileSet(),
+		decls: make(map[string]ast.Node),
 	}
 
-
-func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, error) {
 	var path string
-	var pkg *ast.Package
+	var parsed *ast.Package
 
 	switch ff := f.(type) {
 	case string:
 		path = ff
-		pkgs, err := parser.ParseDir(fset, path, nil, 0)
+		pkgs, err := parser.ParseDir(pkg.fset, path, nil, 0)
 		if err != nil {
 			return nil, err
 		}
 		for _, p := range pkgs {
-			pkg = p
+			parsed = p
 			continue
 		}
-		if pkg == nil {
+		if parsed == nil {
 			return nil, errors.New("no package found")
 		}
 
 	case map[string]io.Reader:
-		pkg = &ast.Package{Files: make(map[string]*ast.File)}
+		parsed = &ast.Package{Files: make(map[string]*ast.File)}
 		for filename, reader := range ff {
 			path = filepath.Dir(filename)
-			if src, err := parser.ParseFile(fset, filename, reader, 0); err == nil {
+			if src, err := parser.ParseFile(pkg.fset, filename, reader, 0); err == nil {
 				name := src.Name.Name
-				pkg.Name = name
-				pkg.Files[filename] = src
+				parsed.Name = name
+				parsed.Files[filename] = src
 			} else {
 				return nil, err
 			}
@@ -146,6 +170,12 @@ func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, e
 
 	default:
 		panic(f)
+	}
+
+	for _, f := range parsed.Files {
+		for name, obj := range f.Scope.Objects {
+			pkg.decls[name] = obj.Decl.(ast.Node)
+		}
 	}
 
 	conf := &types.Config{
@@ -156,10 +186,16 @@ func parseAndCheckPackage(f interface{}, fset *token.FileSet) (*types.Package, e
 		Importer:         importer.Default(),
 	}
 
-	files := make([]*ast.File, 0, len(pkg.Files))
-	for _, f := range pkg.Files {
+	files := make([]*ast.File, 0, len(parsed.Files))
+	for _, f := range parsed.Files {
 		files = append(files, f)
 	}
 
-	return conf.Check(path, fset, files, nil)
+	checked, err := conf.Check(path, pkg.fset, files, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pkg.scope = checked.Scope()
+	return pkg, nil
 }
