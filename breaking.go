@@ -97,28 +97,28 @@ func (d *ObjectDiff) New() *Object {
 // If a string, it is the path to the package.
 // If a map, it maps filenames to source code.
 func ComparePackages(a, b interface{}) ([]*ObjectDiff, error) {
-	apkg, err := parseAndCheckPackage(a)
+	pkga, err := parseAndCheckPackage(a)
 	if err != nil {
 		return nil, err
 	}
 
-	bpkg, err := parseAndCheckPackage(b)
+	pkgb, err := parseAndCheckPackage(b)
 	if err != nil {
 		return nil, err
 	}
 
 	var diffs []*ObjectDiff
-	for _, name := range apkg.scope.Names() {
-		x := apkg.scope.Lookup(name)
+	for _, name := range pkga.scope.Names() {
+		x := pkga.scope.Lookup(name)
 		if !x.Exported() {
 			continue
 		}
-		y := bpkg.scope.Lookup(name)
+		y := pkgb.scope.Lookup(name)
 		if typecmp.Compatible(x, y) {
 			continue
 		}
-		objx := &Object{x, apkg.fset, apkg.decls[name]}
-		objy := &Object{y, bpkg.fset, bpkg.decls[name]}
+		objx := &Object{x, pkga.fset, pkga.decls[name]}
+		objy := &Object{y, pkgb.fset, pkgb.decls[name]}
 		diffs = append(diffs, &ObjectDiff{objx, objy})
 	}
 
