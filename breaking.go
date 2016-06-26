@@ -1,7 +1,10 @@
 // Package breaking reports breaking changes across two versions of a package.
 //
-// This is the exhaustive list of changes that are considered breaking:
-//  - Removing an exposed name (constant, type, variable, function).
+// Below is the exhaustive list of changes that are considered breaking.
+// It applies exclusively to exposed names.
+//
+//  - Removing a name (constant, type, variable, function).
+//  - Changing the kind of a name.
 //  - Adding or removing a method in an interface.
 //  - Adding or removing a parameter in a function or interface.
 //  - Changing the type of a parameter or result in a function or interface.
