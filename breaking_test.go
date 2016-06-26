@@ -76,6 +76,7 @@ func TestNonBreaking(t *testing.T) {
 		"StructUnexportedAddedUnexported",
 		"StructUnexportedRemoved",
 		"StructUnexportedRepositioned",
+		"TestDeletedIgnored",
 	}
 
 	diffs, err := ComparePackages(dira, dirb)

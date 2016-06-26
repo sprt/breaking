@@ -25,7 +25,9 @@ import (
 	"go/token"
 	"go/types"
 	"io"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sprt/breaking/internal/typecmp"
 )
@@ -143,7 +145,9 @@ func parseAndCheckPackage(f interface{}) (*pkg, error) {
 	switch ff := f.(type) {
 	case string:
 		path = ff
-		pkgs, err := parser.ParseDir(pkg.fset, path, nil, 0)
+		pkgs, err := parser.ParseDir(pkg.fset, path, func(info os.FileInfo) bool {
+			return !strings.HasSuffix(info.Name(), "_test.go")
+		}, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -158,6 +162,9 @@ func parseAndCheckPackage(f interface{}) (*pkg, error) {
 	case map[string]io.Reader:
 		parsed = &ast.Package{Files: make(map[string]*ast.File)}
 		for filename, reader := range ff {
+			if !strings.HasSuffix(filename, ".go") || strings.HasSuffix(filename, "_test.go") {
+				continue
+			}
 			path = filepath.Dir(filename)
 			if src, err := parser.ParseFile(pkg.fset, filename, reader, 0); err == nil {
 				name := src.Name.Name
