@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/sprt/breaking"
-	"github.com/sprt/breaking/cmd/gobreaking/git"
+	"github.com/sprt/breaking/cmd/gobreaking/internal/git"
 )
 
 func init() {

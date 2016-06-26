@@ -1,5 +1,3 @@
-// Package git is intended for internal use only.
-// Do not import it into your own project as breaking changes may occur.
 package git
 
 import (

@@ -27,7 +27,7 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/sprt/breaking/typecmp"
+	"github.com/sprt/breaking/internal/typecmp"
 )
 
 // An Object describes a named language entity such as
