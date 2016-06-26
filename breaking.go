@@ -64,7 +64,10 @@ func (o *Object) String() string {
 		}
 	}
 	var buf bytes.Buffer
-	printer.Fprint(&buf, o.fset, decl)
+	err := printer.Fprint(&buf, o.fset, decl)
+	if err != nil {
+		panic(err)
+	}
 	return buf.String()
 }
 
