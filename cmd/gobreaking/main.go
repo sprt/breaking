@@ -18,8 +18,8 @@
 //
 // gobreaking can be invoked two ways:
 //
-// By providing no arguments: it reports the breaking changes between HEAD and
-// the working directory.
+// By providing one argument treeish: it reports the breaking changes between
+// treeish and the working directory.
 //
 // By providing two arguments treeish1 and treeish2: it reports the breaking
 // changes between treeish1 and treeish2.
@@ -44,8 +44,8 @@ func main() {
 
 	var a, b interface{}
 	switch flag.NArg() {
-	case 0:
-		head, err := treeFiles("HEAD")
+	case 1:
+		head, err := treeFiles(flag.Arg(0))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
@@ -89,7 +89,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s [treeish1 treeish2]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s treeish1 [treeish2]\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
