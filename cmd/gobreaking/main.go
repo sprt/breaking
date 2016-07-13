@@ -23,6 +23,9 @@
 //
 // By providing two arguments treeish1 and treeish2: it reports the breaking
 // changes between treeish1 and treeish2.
+//
+// The exit code of gobreaking is 2 for erroneous invocation,
+// 1 if a breaking change was reported, and 0 otherwise.
 package main
 
 import (
