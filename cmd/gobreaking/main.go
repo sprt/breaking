@@ -1,3 +1,28 @@
+// gobreaking reports breaking changes in a Git repository.
+//
+// Below is the exhaustive list of changes that are considered breaking.
+// It applies exclusively to exposed names.
+//
+//  - Removing a name (constant, type, variable, function).
+//  - Changing the kind of a name.
+//  - Adding or removing a method in an interface.
+//  - Adding or removing a parameter in a function or interface.
+//  - Changing the type of a parameter or result in a function or interface.
+//  - Adding or removing a result in a function or interface.
+//  - Changing the type of an exported struct field.
+//  - Removing an exported field from a struct.
+//  - Adding an unexported field to a struct containing only exported fields.
+//  - Adding an exported field before the last field of a struct
+//    containing only exported fields.
+//  - Repositioning a field in a struct containing only exported fields.
+//
+// gobreaking can be invoked two ways:
+//
+// By providing no arguments: it reports the breaking changes between HEAD and
+// the working directory.
+//
+// By providing two arguments treeish1 and treeish2: it reports the breaking
+// changes between treeish1 and treeish2.
 package main
 
 import (
@@ -64,7 +89,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s [treeish treeish]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s [treeish1 treeish2]\n", os.Args[0])
 	flag.PrintDefaults()
 }
 

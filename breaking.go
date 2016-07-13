@@ -1,20 +1,7 @@
 // Package breaking reports breaking changes across two versions of a package.
 //
-// Below is the exhaustive list of changes that are considered breaking.
-// It applies exclusively to exposed names.
-//
-//  - Removing a name (constant, type, variable, function).
-//  - Changing the kind of a name.
-//  - Adding or removing a method in an interface.
-//  - Adding or removing a parameter in a function or interface.
-//  - Changing the type of a parameter or result in a function or interface.
-//  - Adding or removing a result in a function or interface.
-//  - Changing the type of an exported struct field.
-//  - Removing an exported field from a struct.
-//  - Adding an unexported field to a struct containing only exported fields.
-//  - Adding an exported field before the last field of a struct
-//    containing only exported fields.
-//  - Repositioning a field in a struct containing only exported fields.
+// See the documentation of cmd/gobreaking for a list of changes that are
+// considered breaking.
 package breaking
 
 import (
