@@ -1,1 +1,3 @@
+Installation: go get github.com/sprt/breaking/cmd/gobreaking
+
 See https://godoc.org/github.com/sprt/breaking/cmd/gobreaking for more info.
